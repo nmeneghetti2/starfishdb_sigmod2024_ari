@@ -26,23 +26,6 @@ LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
 
 
-# 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
-
-source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh 2>&1 | tee ${LOGS_ABS_PATH}/log_get_deps.txt
-
-# run the script to download the data and preprocess them into the required format (approx 1 hours )
- 
-source ${SCRIPTSDIR_ABS_PATH}/get_uci_datasets.sh 2>&1 | tee ${LOGS_ABS_PATH}/log_get_uci_datasets.txt
-
-
-# compile starfishDB
-cd ${BUILDDIR_ABS_PATH} 
-
-cmake3 -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=`readlink -f ../libs/llvm-project-cxxjit/bin`/clang -DCMAKE_CXX_COMPILER=`readlink -f ../libs/llvm-project-cxxjit/bin`/clang++ ..  2>&1 | tee ${LOGS_ABS_PATH}/log_cmake3.txt
-
-ninja 2>&1 | tee ${LOGS_ABS_PATH}/log_ninja.txt
-
-
 
 #Run experiments
 
