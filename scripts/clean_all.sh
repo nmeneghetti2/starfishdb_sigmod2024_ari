@@ -18,12 +18,14 @@ EXTRASDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/extras)
 BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
 LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
-# Relocate <root>/data, if necessary
-if [ $(grep -c "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt) != "0" ]; then
-  mkdir -p $(grep "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt | head -n 1)
-  DATADIR_ABS_PATH=$(readlink -f $(grep "^[^#]" ${CONFDIR_ABS_PATH}/datadir_redirect.txt | head -n 1))
-  echo "NOTICE: <root>/data directory was relocated to ${DATADIR_ABS_PATH}"
+
+
+# make sure this is run with sudo
+if [ "$EUID" -ne 0 ]
+  then echo "ERROR: please run this script as root"
+  exit 77
 fi
+
 
 
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/gammapdb_data/lda-inmemory-vrexpr/chain_states/*
