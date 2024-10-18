@@ -1,0 +1,7 @@
+# ninja log v5
+6	1141	1729267038831643806	CMakeFiles/lda_preprocess.dir/src/Utils/TimeThis.cpp.o	26083198b23c0a90
+7	1278	1729267038968644695	CMakeFiles/lda_preprocess.dir/src/Utils/RndUtils.cpp.o	ac04365c280e7cab
+2	1297	1729267038986644811	CMakeFiles/lda_preprocess.dir/src/DocWordFileParser.cpp.o	9820a398617ae97f
+4	1417	1729267039105645583	CMakeFiles/lda_preprocess.dir/src/Vocabulary.cpp.o	12a6e923465ffb27
+0	5208	1729267042870669998	CMakeFiles/lda_preprocess.dir/src/lda_preprocess.cpp.o	8681c31b736ebd9f
+5208	5353	1729267043031671042	lda_preprocess	1eb28b523b4c451d
