@@ -1,0 +1,958 @@
+Shell Scripts Compilation
+Generated on: Sun Jan 12 09:49:38 EST 2025
+----------------------------------------
+
+### File: build_gensim_lda_docker_img.sh ###
+----------------------------------------
+#!/bin/bash
+
+# on failure, terminate the script immediately
+set -e
+
+# Determine the script's absolute path
+SCRIPTSDIR_ABS_PATH=$(readlink -f ${BASH_SOURCE[0]})
+SCRIPTSDIR_ABS_PATH=$(dirname ${SCRIPTSDIR_ABS_PATH})
+echo "SCRIPTSDIR_ABS_PATH = ${SCRIPTSDIR_ABS_PATH}"
+
+# Determine the project's root path
+PROJECT_ROOT_ABS_PATH=$(readlink -f ${SCRIPTSDIR_ABS_PATH}/../)
+echo "PROJECT_ROOT_ABS_PATH = ${PROJECT_ROOT_ABS_PATH}"
+
+# Determine commonly used directories
+EXTERNALTOOLS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/external)
+echo "EXTERNALTOOLS_ABS_PATH = ${EXTERNALTOOLS_ABS_PATH}"
+
+EXTERNALLIBS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/libs)
+echo "EXTERNALLIBS_ABS_PATH = ${EXTERNALLIBS_ABS_PATH}"
+
+PATCHESDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/patches)
+echo "PATCHESDIR_ABS_PATH = ${PATCHESDIR_ABS_PATH}"
+
+BUILDDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/build)
+echo "BUILDDIR_ABS_PATH = ${BUILDDIR_ABS_PATH}"
+
+DATADIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/data)
+echo "DATADIR_ABS_PATH = ${DATADIR_ABS_PATH}"
+
+CONFDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/conf)
+echo "CONFDIR_ABS_PATH = ${CONFDIR_ABS_PATH}"
+
+EXTRASDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/extras)
+echo "EXTRASDIR_ABS_PATH = ${EXTRASDIR_ABS_PATH}"
+
+BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
+echo "BENCHMARKSDIR_ABS_PATH = ${BENCHMARKSDIR_ABS_PATH}"
+
+# Relocate <root>/data, if necessary
+if [ $(grep -c "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt) != "0" ]; then
+  mkdir -p $(grep "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt | head -n 1)
+  DATADIR_ABS_PATH=$(readlink -f $(grep "^[^#]" ${CONFDIR_ABS_PATH}/datadir_redirect.txt | head -n 1))
+  echo "NOTICE: <root>/data directory was relocated to ${DATADIR_ABS_PATH}"
+fi
+
+DISTRO="devenv"
+echo "DISTRO = ${DISTRO}"
+
+# define the image's name
+DOCKER_IMG_NAME="gensim_lda_centos7_docker_img" 
+echo "DOCKER_IMG_NAME = ${DOCKER_IMG_NAME}"
+
+echo "Building docker image ${DOCKER_IMG_NAME}"
+
+# build the image
+cwd=$(pwd)
+echo "Current working directory before change = ${cwd}"
+
+cd ${PROJECT_ROOT_ABS_PATH}
+echo "Changed directory to = ${PROJECT_ROOT_ABS_PATH}"
+
+echo "Docker build command = docker build -t ${DOCKER_IMG_NAME} -f ${SCRIPTSDIR_ABS_PATH}/dockerfiles/${DISTRO}/gensim_Dockerfile ."
+docker build -t ${DOCKER_IMG_NAME} -f ${SCRIPTSDIR_ABS_PATH}/dockerfiles/${DISTRO}/gensim_Dockerfile .
+
+cd ${cwd}
+echo "Changed back to original directory = ${cwd}"
+----------------------------------------
+
+
+### File: clean_all_deps.sh ###
+----------------------------------------
+#!/bin/bash
+
+# Determine the script's absolute path
+SCRIPTSDIR_ABS_PATH=$(readlink -f ${BASH_SOURCE[0]})
+SCRIPTSDIR_ABS_PATH=$(dirname ${SCRIPTSDIR_ABS_PATH})
+
+# Determine the project's root path
+PROJECT_ROOT_ABS_PATH=$(readlink -f ${SCRIPTSDIR_ABS_PATH}/../)
+
+# Determine commonly used directories
+EXTERNALTOOLS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/external)
+EXTERNALLIBS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/libs)
+PATCHESDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/patches)
+BUILDDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/build)
+DATADIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/data)
+CONFDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/conf)
+EXTRASDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/extras)
+BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
+
+# Relocate <root>/data, if necessary
+if [ $(grep -c "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt) != "0" ]; then
+  mkdir -p $(grep "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt | head -n 1)
+  DATADIR_ABS_PATH=$(readlink -f $(grep "^[^#]" ${CONFDIR_ABS_PATH}/datadir_redirect.txt | head -n 1))
+  echo "NOTICE: <root>/data directory was relocated to ${DATADIR_ABS_PATH}"
+fi
+
+
+
+
+
+# delete Clangjit (source code and binaries)
+rm -rf ${EXTERNALTOOLS_ABS_PATH}/llvm-project-cxxjit
+rm -rf ${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit
+
+# delete Arrow (source code and binaries)
+rm -rf ${EXTERNALTOOLS_ABS_PATH}/apache-arrow-9.0.0
+rm -rf ${EXTERNALLIBS_ABS_PATH}/apache-arrow-9.0.0
+
+# delete Mallet (source code and binaries)
+rm -rf ${EXTERNALTOOLS_ABS_PATH}/mallet
+rm -rf ${EXTERNALLIBS_ABS_PATH}/mallet
+
+# clean up build directory
+rm -rf ${BUILDDIR_ABS_PATH}/*
+
+----------------------------------------
+
+
+### File: create_gensim_lda_docker_cont.sh ###
+----------------------------------------
+#!/bin/bash
+
+# on failure, terminate the script immediately
+set -e
+
+# determine original username 
+ORIG_USER=${SUDO_USER-${USER}}
+
+# Determine the script's absolute path
+SCRIPTSDIR_ABS_PATH=$(readlink -f "${BASH_SOURCE[0]}")
+SCRIPTSDIR_ABS_PATH=$(dirname "${SCRIPTSDIR_ABS_PATH}")
+
+# Determine the project's root path
+PROJECT_ROOT_ABS_PATH=$(readlink -f "${SCRIPTSDIR_ABS_PATH}/../")
+PROJECT_ROOT_ABS_PATH_HASH=$(echo "${PROJECT_ROOT_ABS_PATH}" | md5sum | cut -d' ' -f 1 | cut -c 25-32) 
+
+# Determine commonly used directories
+DATADIR_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/data")
+
+# Relocate <root>/data, if necessary
+if [ $(grep -c "^[^#]" "${SCRIPTSDIR_ABS_PATH}/../conf/datadir_redirect.txt") != "0" ]; then
+  mkdir -p $(grep "^[^#]" "${SCRIPTSDIR_ABS_PATH}/../conf/datadir_redirect.txt" | head -n 1)
+  DATADIR_ABS_PATH=$(readlink -f $(grep "^[^#]" "${SCRIPTSDIR_ABS_PATH}/../conf/datadir_redirect.txt" | head -n 1))
+  echo "NOTICE: <root>/data directory was relocated to ${DATADIR_ABS_PATH}"
+fi
+
+# Ensure the data directory exists
+mkdir -p "${DATADIR_ABS_PATH}"
+
+DISTRO="devenv"
+
+# define the image's name
+DOCKER_IMG_NAME="gensim_lda_centos7_docker_img" 
+DOCKER_CONT_NAME="gensim_lda_container_${ORIG_USER}${PROJECT_ROOT_ABS_PATH_HASH}"
+MOUNT_OPTIONS="${PROJECT_ROOT_ABS_PATH}:/app:Z ${DATADIR_ABS_PATH}:/data:Z"
+
+echo "Mount options: ${MOUNT_OPTIONS}"
+echo "Container name: ${DOCKER_CONT_NAME}"
+
+docker run -v "${PROJECT_ROOT_ABS_PATH}:/app:Z" -v "${DATADIR_ABS_PATH}:/data:Z" --name "${DOCKER_CONT_NAME}" --detach --tty "${DOCKER_IMG_NAME}" /bin/bash
+
+echo "Or run \"docker exec -it ${DOCKER_CONT_NAME} bash\" to access the container."
+----------------------------------------
+
+
+### File: get_deps.sh ###
+----------------------------------------
+#!/bin/bash
+
+# on failure, terminate the script immediately
+set -e
+
+# Determine the script's absolute path
+SCRIPTSDIR_ABS_PATH=$(readlink -f ${BASH_SOURCE[0]})
+SCRIPTSDIR_ABS_PATH=$(dirname ${SCRIPTSDIR_ABS_PATH})
+
+# Determine the project's root path
+PROJECT_ROOT_ABS_PATH=$(readlink -f ${SCRIPTSDIR_ABS_PATH}/../)
+
+# Determine commonly used directories
+EXTERNALTOOLS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/external)
+EXTERNALLIBS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/libs)
+PATCHESDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/patches)
+BUILDDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/build)
+DATADIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/data)
+CONFDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/conf)
+EXTRASDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/extras)
+BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
+
+# Relocate <root>/data, if necessary
+if [ $(grep -c "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt) != "0" ]; then
+  mkdir -p $(grep "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt | head -n 1)
+  DATADIR_ABS_PATH=$(readlink -f $(grep "^[^#]" ${CONFDIR_ABS_PATH}/datadir_redirect.txt | head -n 1))
+  echo "NOTICE: <root>/data directory was relocated to ${DATADIR_ABS_PATH}"
+fi
+
+
+
+echo "PROJECT_ROOT_ABS_PATH =" ${PROJECT_ROOT_ABS_PATH}
+
+
+CMAKECMD="cmake"
+if hash cmake3 2>/dev/null; then
+   CMAKECMD="cmake3"
+fi
+echo "CMAKECMD =" ${CMAKECMD}
+
+#
+# Download ClangJit sources, if necessary
+#
+# if [ ! -d "${EXTERNALTOOLS_ABS_PATH}/llvm-project-cxxjit" ]; then
+#    echo "${EXTERNALTOOLS_ABS_PATH}/llvm-project-cxxjit does not exist. Downloading the sources..."
+#    cd ${EXTERNALTOOLS_ABS_PATH}
+#    git clone https://github.com/hfinkel/llvm-project-cxxjit.git
+#    cd llvm-project-cxxjit
+#    git checkout 91084ef018240bbb8e24235ff5cd8c355a9c1a1e
+#    git apply ${PATCHESDIR_ABS_PATH}/clangjit.patch
+#    cd ${SCRIPTSDIR_ABS_PATH}
+# fi
+
+#
+# Recompile ClangJit, if necessary
+#
+# if [ ! -d "${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit" ]; then
+#    echo "${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit does not exist. Recompiling..."
+#    cd ${EXTERNALTOOLS_ABS_PATH}/
+#    rm -rf ${EXTERNALTOOLS_ABS_PATH}/llvm-project-cxxjit/build
+#    mkdir  ${EXTERNALTOOLS_ABS_PATH}/llvm-project-cxxjit/build
+#    rm -rf ${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit
+#    mkdir  ${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit
+#    cd ${EXTERNALTOOLS_ABS_PATH}/llvm-project-cxxjit
+#    ${CMAKECMD} -S llvm -B build -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=ON -DLLVM_USE_SPLIT_DWARF=ON -DLLVM_ENABLE_PROJECTS="llvm;clang;openmp" -DCMAKE_INSTALL_PREFIX=${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit
+#    cd ${EXTERNALTOOLS_ABS_PATH}/llvm-project-cxxjit/build
+#    ninja -j8
+#    ninja install
+#    cd ${SCRIPTSDIR_ABS_PATH}
+# fi
+
+#
+# Download Arrow sources, if necessary
+#
+# if [ ! -d "${EXTERNALTOOLS_ABS_PATH}/apache-arrow-9.0.0" ]; then
+#    echo "${EXTERNALTOOLS_ABS_PATH}/apache-arrow-9.0.0 does not exist. Downloading the sources..."
+#    cd ${EXTERNALTOOLS_ABS_PATH}
+#    #wget https://dlcdn.apache.org/arrow/arrow-9.0.0/apache-arrow-9.0.0.tar.gz
+#    wget https://archive.apache.org/dist/arrow/arrow-9.0.0/apache-arrow-9.0.0.tar.gz
+#    tar -xvzf apache-arrow-9.0.0.tar.gz
+#    rm apache-arrow-9.0.0.tar.gz
+#    cd ${SCRIPTSDIR_ABS_PATH}
+# fi
+
+#
+# Recompile Arrow, if necessary
+#
+# if [ ! -d "${EXTERNALLIBS_ABS_PATH}/apache-arrow-9.0.0/cpp" ]; then
+#    echo "${EXTERNALLIBS_ABS_PATH}/apache-arrow-9.0.0/cpp does not exist. Recompiling..."
+#    cd ${EXTERNALTOOLS_ABS_PATH}/
+#    rm -rf ${EXTERNALTOOLS_ABS_PATH}/apache-arrow-9.0.0/cpp/build
+#    mkdir -p ${EXTERNALTOOLS_ABS_PATH}/apache-arrow-9.0.0/cpp/build
+#    rm -rf ${EXTERNALLIBS_ABS_PATH}/apache-arrow-9.0.0
+#    mkdir -p ${EXTERNALLIBS_ABS_PATH}/apache-arrow-9.0.0/cpp
+#    cd ${EXTERNALTOOLS_ABS_PATH}/apache-arrow-9.0.0/cpp/build
+#    ${CMAKECMD} -G Ninja -DARROW_PARQUET=ON -DARROW_ORC=ON -DARROW_FILESYSTEM=ON -DARROW_DATASET=ON -DARROW_CSV=ON -DARROW_COMPUTE=ON -DARROW_WITH_BZ2=ON -DARROW_WITH_ZLIB=ON -DARROW_WITH_LZ4=ON -DARROW_WITH_SNAPPY=ON -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=${EXTERNALLIBS_ABS_PATH}/apache-arrow-9.0.0/cpp -DCMAKE_C_COMPILER=${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit/bin/clang -DCMAKE_CXX_COMPILER=${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit/bin/clang++ ..
+#    ninja -j8
+#    ninja install
+#    cd ${SCRIPTSDIR_ABS_PATH}
+# fi
+
+# recreate Makefiles
+
+rm -rf ${BUILDDIR_ABS_PATH}/
+mkdir ${BUILDDIR_ABS_PATH}
+#cd ${BUILDDIR_ABS_PATH}
+${CMAKECMD} -B ${BUILDDIR_ABS_PATH} -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit/bin/clang  -DCMAKE_CXX_COMPILER=${EXTERNALLIBS_ABS_PATH}/llvm-project-cxxjit/bin/clang++ ${PROJECT_ROOT_ABS_PATH}
+
+cd ${SCRIPTSDIR_ABS_PATH} 
+
+
+# 
+# # install tex compiler
+wget https://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz --no-check-certificate
+zcat < install-tl-unx.tar.gz | tar xf -
+cd install-tl-*
+yum install perl-Digest-MD5 -y
+perl ./install-tl --profile=${CONFDIR_ABS_PATH}/texlive.profile
+export PATH=$PATH:/usr/local/texlive/2024/bin/x86_64-linux
+# echo 'export PATH=/usr/local/texlive/2024/bin/x86_64-linux:$PATH' >> ~/.bashrc
+# source ~/.bashr
+rm -rf install-tl-20240915
+rm install-tl-unx.tar.gz
+cd ${SCRIPTSDIR_ABS_PATH} 
+----------------------------------------
+
+
+### File: get_uci_datasets.sh ###
+----------------------------------------
+#!/bin/bash
+
+# on failure, terminate the script immediately
+set -e
+
+# Determine the script's absolute path
+SCRIPTSDIR_ABS_PATH=$(readlink -f ${BASH_SOURCE[0]})
+SCRIPTSDIR_ABS_PATH=$(dirname ${SCRIPTSDIR_ABS_PATH})
+
+# Determine the project's root path
+PROJECT_ROOT_ABS_PATH=$(readlink -f ${SCRIPTSDIR_ABS_PATH}/../)
+
+# Determine commonly used directories
+EXTERNALTOOLS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/external)
+EXTERNALLIBS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/libs)
+PATCHESDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/patches)
+BUILDDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/build)
+DATADIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/data)
+CONFDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/conf)
+EXTRASDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/extras)
+BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
+
+# Relocate <root>/data, if necessary
+if [ $(grep -c "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt) != "0" ]; then
+  mkdir -p $(grep "^[^#]" $CONFDIR_ABS_PATH/datadir_redirect.txt | head -n 1)
+  DATADIR_ABS_PATH=$(readlink -f $(grep "^[^#]" ${CONFDIR_ABS_PATH}/datadir_redirect.txt | head -n 1))
+  echo "NOTICE: <root>/data directory was relocated to ${DATADIR_ABS_PATH}"
+fi
+
+
+
+
+
+CMAKECMD="cmake"
+if hash cmake3 2>/dev/null; then
+        CMAKECMD="cmake3"
+fi
+
+export MALLET_MEMORY=16g
+
+#
+# Build <root>/extras/lda_preprocess, if necessary
+#
+if [ ! -d "${EXTRASDIR_ABS_PATH}/lda_preprocess/build" ]; then
+   echo "${EXTRASDIR_ABS_PATH}/lda_preprocess/build does not exist. Recompiling..."
+   ${CMAKECMD} -B ${EXTRASDIR_ABS_PATH}/lda_preprocess/build -G Ninja -D CMAKE_BUILD_TYPE=RelWithDebInfo -D CMAKE_C_COMPILER=gcc -D CMAKE_CXX_COMPILER=g++ ${EXTRASDIR_ABS_PATH}/lda_preprocess
+   ninja -C ${EXTRASDIR_ABS_PATH}/lda_preprocess/build
+else
+   echo "Compiling <root>/extras/lda_preprocess ... Nothing to do."
+fi
+
+
+#
+# Download & compile Mallet, if necessary
+#
+if [ ! -d "${EXTRASDIR_ABS_PATH}/mallet/Mallet" ]; then
+   cwd=$(pwd)
+   mkdir -p ${EXTRASDIR_ABS_PATH}/mallet/Mallet
+   git clone --branch v202108 https://github.com/mimno/Mallet.git ${EXTRASDIR_ABS_PATH}/mallet/Mallet
+   cd "${EXTRASDIR_ABS_PATH}/mallet/Mallet" 
+   git apply --unsafe-paths --directory=${EXTRASDIR_ABS_PATH}/mallet/Mallet ${PATCHESDIR_ABS_PATH}/mallet.patch
+   ant -buildfile ${EXTRASDIR_ABS_PATH}/mallet/Mallet/build.xml
+   cd ${cwd}
+else
+   echo "Compiling Mallet... Nothing to do."
+fi
+
+
+#
+# Download the UCI "bag-of-words" data sets, if necessary
+#
+if [ ! -d "${DATADIR_ABS_PATH}/raw/uci" ]; then
+   echo "${DATADIR_ABS_PATH}/raw/uci does not exist. Downloading the data sets froms scratch..."
+   mkdir -p ${DATADIR_ABS_PATH}/raw/uci
+   # download UCI datasets
+   wget -P ${DATADIR_ABS_PATH}/raw/uci -nc -i ${CONFDIR_ABS_PATH}/uci_datasets.txt
+   for filename in ${DATADIR_ABS_PATH}/raw/uci/*.gz
+   do
+      if [ ! -f "$(echo ${filename} | sed -e 's/\.[^.]*$//')" ]
+         then
+            gunzip -c -v "${filename}" > $(echo ${filename} | sed -e 's/\.[^.]*$//')  # x.txt.gz >x.txt
+      fi
+   done
+else
+   echo "Downloading UCI datasets... Nothing to do."
+fi
+
+# #######################################
+# KOS DATASET
+# #######################################
+
+#
+# Run lda_preprocess on the KOS dataset, if necessary
+#
+if [ ! -d "${DATADIR_ABS_PATH}/KOS_train/tsv" ]; then
+   echo "Converting KOS dataset into TSV format..."
+   ${EXTRASDIR_ABS_PATH}/lda_preprocess/build/lda_preprocess --outputDir ${DATADIR_ABS_PATH} --uciDatasetsDir ${DATADIR_ABS_PATH}/raw/uci --dataset KOS --format TSV 
+else
+   echo "Converting KOS dataset into TSV format... Nothing to do."
+fi
+
+if [ ! -d "${DATADIR_ABS_PATH}/KOS_train/csv2" ]; then
+   echo "Converting KOS dataset into CSV2 format..."
+   ${EXTRASDIR_ABS_PATH}/lda_preprocess/build/lda_preprocess --outputDir ${DATADIR_ABS_PATH} --uciDatasetsDir ${DATADIR_ABS_PATH}/raw/uci --dataset KOS --format CSV2
+else
+   echo "Converting KOS dataset into CSV2 format... Nothing to do."
+fi
+
+#
+# Importing KOS dataset into Mallet, if necessary
+#
+if [ ! -f "${DATADIR_ABS_PATH}/KOS_train/mallet/training.mallet" ]; then
+   echo "Converting KOS training set into Mallet format..."
+   mkdir -p "${DATADIR_ABS_PATH}/KOS_train/mallet"
+   ${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet import-file --keep-sequence --preserve-case TRUE --token-regex "[\p{L}\p{N}_\p{P}\p{Punct}]+" --input ${DATADIR_ABS_PATH}/KOS_train/tsv/training.tsv --output ${DATADIR_ABS_PATH}/KOS_train/mallet/training.mallet
+else
+   echo "Converting KOS training set into Mallet format... Nothing to do."
+fi
+
+if [ ! -f "${DATADIR_ABS_PATH}/KOS_test/mallet/test.mallet" ]; then
+   echo "Converting KOS test set into Mallet format..."
+   mkdir -p "${DATADIR_ABS_PATH}/KOS_test/mallet"
+   ${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet import-file --keep-sequence --preserve-case TRUE --token-regex "[\p{L}\p{N}_\p{P}\p{Punct}]+" --input ${DATADIR_ABS_PATH}/KOS_test/tsv/test.tsv --output ${DATADIR_ABS_PATH}/KOS_test/mallet/test.mallet
+else
+   echo "Converting KOS test set into Mallet format... Nothing to do."
+fi
+
+# #######################################
+# NYTIMES DATASET
+# #######################################
+
+#
+# Run lda_preprocess on the NYTIMES dataset, if necessary
+#
+if [ ! -d "${DATADIR_ABS_PATH}/NYTIMES_train/tsv" ]; then
+   echo "Converting NYTIMES dataset into TSV format..."
+   ${EXTRASDIR_ABS_PATH}/lda_preprocess/build/lda_preprocess --outputDir ${DATADIR_ABS_PATH} --uciDatasetsDir ${DATADIR_ABS_PATH}/raw/uci --dataset NYTIMES --format TSV 
+else
+   echo "Converting NYTIMES dataset into TSV format... Nothing to do."
+fi
+
+if [ ! -d "${DATADIR_ABS_PATH}/NYTIMES_train/csv2" ]; then
+   echo "Converting NYTIMES dataset into CSV2 format..."
+   ${EXTRASDIR_ABS_PATH}/lda_preprocess/build/lda_preprocess --outputDir ${DATADIR_ABS_PATH} --uciDatasetsDir ${DATADIR_ABS_PATH}/raw/uci --dataset NYTIMES --format CSV2
+else
+   echo "Converting NYTIMES dataset into CSV2 format... Nothing to do."
+fi
+
+#
+# Importing NYTIMES dataset into Mallet, if necessary
+#
+if [ ! -f "${DATADIR_ABS_PATH}/NYTIMES_train/mallet/training.mallet" ]; then
+   echo "Converting NYTIMES training set into Mallet format..."
+   mkdir -p "${DATADIR_ABS_PATH}/NYTIMES_train/mallet"
+   ${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet import-file --keep-sequence --preserve-case TRUE --token-regex "[\p{L}\p{N}_\p{P}\p{Punct}]+" --input ${DATADIR_ABS_PATH}/NYTIMES_train/tsv/training.tsv --output ${DATADIR_ABS_PATH}/NYTIMES_train/mallet/training.mallet
+else
+   echo "Converting NYTIMES training set into Mallet format... Nothing to do."
+fi
+
+if [ ! -f "${DATADIR_ABS_PATH}/NYTIMES_test/mallet/test.mallet" ]; then
+   echo "Converting NYTIMES test set into Mallet format..."
+   mkdir -p "${DATADIR_ABS_PATH}/NYTIMES_test/mallet"
+   ${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet import-file --keep-sequence --preserve-case TRUE --token-regex "[\p{L}\p{N}_\p{P}\p{Punct}]+" --input ${DATADIR_ABS_PATH}/NYTIMES_test/tsv/test.tsv --output ${DATADIR_ABS_PATH}/NYTIMES_test/mallet/test.mallet
+else
+   echo "Converting NYTIMES test set into Mallet format... Nothing to do."
+fi
+
+
+
+# #######################################
+# PUBMED DATASET
+# #######################################
+
+#
+# Run lda_preprocess on the PUBMED dataset, if necessary
+#
+if [ ! -d "${DATADIR_ABS_PATH}/PUBMED_train/tsv" ]; then
+   echo "Converting PUBMED dataset into TSV format..."
+   ${EXTRASDIR_ABS_PATH}/lda_preprocess/build/lda_preprocess --outputDir ${DATADIR_ABS_PATH} --uciDatasetsDir ${DATADIR_ABS_PATH}/raw/uci --dataset PUBMED --format TSV 
+else
+   echo "Converting PUBMED dataset into TSV format... Nothing to do."
+fi
+
+if [ ! -d "${DATADIR_ABS_PATH}/PUBMED_train/csv2" ]; then
+   echo "Converting PUBMED dataset into CSV2 format..."
+   ${EXTRASDIR_ABS_PATH}/lda_preprocess/build/lda_preprocess --outputDir ${DATADIR_ABS_PATH} --uciDatasetsDir ${DATADIR_ABS_PATH}/raw/uci --dataset PUBMED --format CSV2
+else
+   echo "Converting PUBMED dataset into CSV2 format... Nothing to do."
+fi
+
+#
+# Importing PUBMED dataset into Mallet, if necessary
+#
+if [ ! -f "${DATADIR_ABS_PATH}/PUBMED_train/mallet/training.mallet" ]; then
+   echo "Converting PUBMED training set into Mallet format..."
+   mkdir -p "${DATADIR_ABS_PATH}/PUBMED_train/mallet"
+   ${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet import-file --keep-sequence --preserve-case TRUE --token-regex "[\p{L}\p{N}_\p{P}\p{Punct}]+" --input ${DATADIR_ABS_PATH}/PUBMED_train/tsv/training.tsv --output ${DATADIR_ABS_PATH}/PUBMED_train/mallet/training.mallet
+else
+   echo "Converting PUBMED training set into Mallet format... Nothing to do."
+fi
+
+if [ ! -f "${DATADIR_ABS_PATH}/PUBMED_test/mallet/test.mallet" ]; then
+   echo "Converting PUBMED test set into Mallet format..."
+   mkdir -p "${DATADIR_ABS_PATH}/PUBMED_test/mallet"
+   ${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet import-file --keep-sequence --preserve-case TRUE --token-regex "[\p{L}\p{N}_\p{P}\p{Punct}]+" --input ${DATADIR_ABS_PATH}/PUBMED_test/tsv/test.tsv --output ${DATADIR_ABS_PATH}/PUBMED_test/mallet/test.mallet
+else
+   echo "Converting PUBMED test set into Mallet format... Nothing to do."
+fi
+
+
+
+
+
+# bin/mallet import-file --keep-sequence --input sample-data/stackexchange/tsv/training.tsv --output tsv_dataset.mallet
+
+# 
+# /home/niccolom/vs_projects/gammapdb_arrow/libs/mallet/Mallet/bin/mallet train-topics --input /home/niccolom/vs_projects/gammapdb_arrow/data/NYTIMES_train/mallet/training.mallet --num-topics 20 --num-iterations 20 --output-topic-keys /home/niccolom/vs_projects/gammapdb_arrow/benchmarks/NYTIMES_train_mallet_topics-def.txt --output-state /home/niccolom/vs_projects/gammapdb_arrow/benchmarks/NYTIMES_train_mallet_topics-state.gz
+
+
+
+
+
+
+
+----------------------------------------
+
+
+### File: run_gensim_benchmark.sh ###
+----------------------------------------
+#!/bin/bash
+
+# Determine the project's root directory
+PROJECT_ROOT_ABS_PATH=$(readlink -f "$(dirname "$0")/..")
+
+# Set the scripts directory
+SCRIPTS_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/scripts")
+
+# Set the path to the run_gensim.sh script
+RUN_GENSIM_SCRIPT="${SCRIPTS_ABS_PATH}/run_gensim.sh"
+
+# Parse command line arguments
+TEST_MODE=false
+while getopts "t" opt; do
+  case $opt in
+    t)
+      TEST_MODE=true
+      echo "Running in test mode - will only process KOS dataset"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
+
+# Check if the run_gensim.sh script exists
+if [ ! -f "$RUN_GENSIM_SCRIPT" ]; then
+    echo "Error: $RUN_GENSIM_SCRIPT not found!"
+    exit 1
+fi
+
+# Make sure the script is executable
+chmod +x "$RUN_GENSIM_SCRIPT"
+
+# Set the logs directory
+LOGS_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/logs")
+
+# Create the logs directory if it doesn't exist
+mkdir -p "$LOGS_ABS_PATH"
+
+# Set the log file path
+LOG_FILE="${LOGS_ABS_PATH}/gensim_benchmark_$(date +%Y%m%d_%H%M%S).log"
+
+# Array of datasets - if test mode, only include KOS
+if [ "$TEST_MODE" = true ]; then
+    DATASETS=("KOS")
+else
+    DATASETS=("KOS" "NYTIMES" "PUBMED")
+fi
+
+# Function to run the script, log output, and measure time
+run_and_log() {
+    local dataset=$1
+    local start_time=$(date +%s)
+    
+    echo "Running LDA for dataset: $dataset" | tee -a "$LOG_FILE"
+    echo "Start time: $(date)" | tee -a "$LOG_FILE"
+    
+    "$RUN_GENSIM_SCRIPT" -d "$dataset" 2>&1 | tee -a "$LOG_FILE"
+    
+    local end_time=$(date +%s)
+    local duration=$((end_time - start_time))
+    
+    echo "Finished processing $dataset" | tee -a "$LOG_FILE"
+    echo "End time: $(date)" | tee -a "$LOG_FILE"
+    echo "Time taken for $dataset: $duration seconds" | tee -a "$LOG_FILE"
+    echo "----------------------------------------" | tee -a "$LOG_FILE"
+}
+
+# Main execution
+{
+    echo "Starting Gensim benchmark at $(date)"
+    if [ "$TEST_MODE" = true ]; then
+        echo "Running in test mode with KOS dataset only"
+    fi
+    echo "Project root: $PROJECT_ROOT_ABS_PATH"
+    echo "Scripts directory: $SCRIPTS_ABS_PATH"
+    echo "Log file: $LOG_FILE"
+    echo "----------------------------------------"
+
+    # Loop through each dataset and run the script
+    for dataset in "${DATASETS[@]}"; do
+        run_and_log "$dataset"
+    done
+
+    echo "All datasets have been processed."
+    if [ "$TEST_MODE" = true ]; then
+        echo "Test mode completed successfully with KOS dataset"
+    fi
+    echo "Gensim benchmark completed at $(date)"
+} 2>&1 | tee -a "$LOG_FILE"
+
+echo "Log file has been saved to: $LOG_FILE"
+----------------------------------------
+
+
+### File: run_gensim.sh ###
+----------------------------------------
+#!/bin/bash
+
+# On failure, terminate the script immediately
+set -e
+
+# Cleanup function for any errors
+cleanup() {
+  echo "An error occurred!"
+  exit 1
+}
+trap 'cleanup' ERR
+
+# Determine the script's current absolute path
+SCRIPTSDIR_ABS_PATH=$(readlink -f "${BASH_SOURCE[0]}")
+SCRIPTSDIR_ABS_PATH=$(dirname "${SCRIPTSDIR_ABS_PATH}")
+
+# Determine the project's root directory (parent of the script's directory)
+PROJECT_ROOT_ABS_PATH=$(readlink -f "${SCRIPTSDIR_ABS_PATH}/../")
+
+# Now make all other paths absolute based on the project's root directory
+EXTERNALLIBS_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/external")
+PATCHESDIR_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/patches")
+BUILDDIR_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/build")
+DATADIR_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/data")
+BENCHMARKSDIR_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/benchmarks")
+SCRIPTS_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/scripts")
+
+# DATASET_NAME doesn't need to be an absolute path, so you can leave it as is
+DATASET_NAME="KOS"
+echo "--------------------------------------------------------------------------------"
+# Echo the absolute paths for verification
+echo "Project root directory: ${PROJECT_ROOT_ABS_PATH}"
+echo "External libs directory: ${EXTERNALLIBS_ABS_PATH}"
+echo "Patches directory: ${PATCHESDIR_ABS_PATH}"
+echo "Build directory: ${BUILDDIR_ABS_PATH}"
+echo "Data directory: ${DATADIR_ABS_PATH}"
+echo "Benchmarks directory: ${BENCHMARKSDIR_ABS_PATH}"
+echo "--------------------------------------------------------------------------------"
+
+# Function to simulate a loading bar
+loading_bar() {
+  local duration=30
+  echo -n "Loading ["
+  for i in $(seq 1 $duration); do
+    sleep 0.1
+    echo -n "="
+  done
+  echo "]"
+}
+
+# Load necessary software collections (SCL)
+# source /opt/rh/devtoolset-11/enable
+# source /opt/rh/llvm-toolset-11.0/enable
+# source /opt/rh/rh-python36/enable
+# source /opt/rh/rh-git29/enable
+
+# # Check if yum is available
+# if ! command -v yum &> /dev/null; then
+#     echo "Error: yum is not available on this system."
+#     exit 1
+# fi
+
+# Check if the Mallet directory exists
+if [ ! -d "${EXTERNALLIBS_ABS_PATH}/mallet/Mallet" ]; then
+    # Create the necessary directories
+    mkdir -p ${EXTERNALLIBS_ABS_PATH}/mallet/Mallet
+    
+    # Clone the Mallet repository
+    git clone --branch v202108 https://github.com/mimno/Mallet.git ${EXTERNALLIBS_ABS_PATH}/mallet/Mallet
+    
+    # Apply the patch
+    git apply --unsafe-paths --directory=${EXTERNALLIBS_ABS_PATH}/mallet/Mallet ${PATCHESDIR_ABS_PATH}/mallet.patch
+    
+    # Build Mallet using Ant
+    ant -buildfile ${EXTERNALLIBS_ABS_PATH}/mallet/Mallet/build.xml
+else
+    echo "Compiling Mallet... Nothing to do."
+fi
+
+# Set environment variables
+export MALLET_MEMORY=16g
+
+# Configuration variables
+MALLET_DIR=${EXTERNALLIBS_ABS_PATH}/mallet/Mallet
+OUTPUT_DIR=${BENCHMARKSDIR_ABS_PATH}
+DATASET_NAME="KOS"
+NUM_TOPICS=20
+ALPHA_PRIOR=0.2
+BETA_PRIOR=0.1
+NUM_ITERATIONS=20
+NUM_RUNS=1
+SAVE_EVERY=2
+RND_SEED=123
+SKIP_TRAINING="FALSE"
+NUM_THREADS=1
+
+# Parse command-line arguments for flexibility
+while [[ $# -gt 0 ]]; do
+  key="$1"
+  case $key in
+    -m|--malletDir)
+      MALLET_DIR="$2"
+      shift; shift ;;
+    -o|--outputDir)
+      OUTPUT_DIR="$2"
+      shift; shift ;;
+    -d|--datasetName)
+      DATASET_NAME="$2"
+      shift; shift ;;
+    -t|--trainingSetDir)
+      TRAININGSET_DIR="$2"
+      shift; shift ;;
+    -e|--testSetDir)
+      TESTSET_DIR="$2"
+      shift; shift ;;
+    -k|--numTopics)
+      NUM_TOPICS="$2"
+      shift; shift ;;
+    -a|--alpha)
+      ALPHA_PRIOR="$2"
+      shift; shift ;;
+    -b|--beta)
+      BETA_PRIOR="$2"
+      shift; shift ;;
+    -n|--numIterations)
+      NUM_ITERATIONS="$2"
+      shift; shift ;;
+    --numRuns)
+      NUM_RUNS="$2"
+      shift; shift ;;
+    -s|--saveEvery)
+      SAVE_EVERY="$2"
+      shift; shift ;;
+    -r|--rndSeed)
+      RND_SEED="$2"
+      shift; shift ;;
+    --numThreads)
+      NUM_THREADS="$2"
+      shift; shift ;;
+    --skipTraining)
+      SKIP_TRAINING="TRUE"
+      shift ;;
+    *) POSITIONAL+=("$1"); shift ;;
+  esac
+done
+
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
+# Paths for chain state and timing
+CHAIN_STATE_FILEPATH=${PROJECT_ROOT_ABS_PATH}/benchmarks/gensim/chain_states/
+TIME_FILEPATH=${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_time.csv
+
+# Create necessary directories
+echo "--------------------------------------------------------------------------------"
+mkdir -p ${OUTPUT_DIR}/gensim/chain_states && echo "Created directory: ${OUTPUT_DIR}/gensim/chain_states"
+mkdir -p ${OUTPUT_DIR}/gensim/evaluators && echo "Created directory: ${OUTPUT_DIR}/gensim/evaluators"
+mkdir -p ${OUTPUT_DIR}/gensim/topics_defs && echo "Created directory: ${OUTPUT_DIR}/gensim/topics_defs"
+mkdir -p ${OUTPUT_DIR}/gensim/csv && echo "Created directory: ${OUTPUT_DIR}/gensim/csv"
+mkdir -p ${OUTPUT_DIR}/csv && echo "Created directory: ${OUTPUT_DIR}/csv"
+echo "--------------------------------------------------------------------------------"
+
+# Cleanup existing generated files
+for i in $(seq ${SAVE_EVERY} ${SAVE_EVERY} ${NUM_ITERATIONS}); do
+  rm -f ${OUTPUT_DIR}/gensim/chain_states/chain-state_${DATASET_NAME}_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}.gz.${i}
+  rm -f ${OUTPUT_DIR}/gensim/evaluators/evaluator_${DATASET_NAME}_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}.${i}
+done
+
+# Clean generated CSV files
+rm -f ${OUTPUT_DIR}/csv/${DATASET_NAME}_test_*_gensim_loglik.csv
+rm -f ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_*_gensim_loglik.csv
+rm -f ${OUTPUT_DIR}/csv/${DATASET_NAME}_*_gensim_perplexity.csv
+rm -f ${OUTPUT_DIR}/csv/${DATASET_NAME}_*_gensim_plotdata.csv
+echo "Generated files removed."
+
+# Define dataset paths and stats
+TRAININGSET_DIR=${DATADIR_ABS_PATH}/${DATASET_NAME}_train/mallet
+TESTSET_DIR=${DATADIR_ABS_PATH}/${DATASET_NAME}_test/mallet
+TRAININGSET_NUMTOKENS=$(echo "scale=4; $(cat ${DATADIR_ABS_PATH}/${DATASET_NAME}_train/csv2/${DATASET_NAME}_train.csv | wc -l)-2" | bc)
+TESTSET_NUMTOKENS=$(echo "scale=4; $(cat ${DATADIR_ABS_PATH}/${DATASET_NAME}_test/csv2/${DATASET_NAME}_test.csv | wc -l)-2" | bc)
+TRAININGSET_NUMDOCS=$(echo "scale=4; $(cat ${DATADIR_ABS_PATH}/${DATASET_NAME}_train/tsv/training.tsv | wc -l)-0" | bc)
+TESTSET_NUMDOCS=$(echo "scale=4; $(cat ${DATADIR_ABS_PATH}/${DATASET_NAME}_test/tsv/test.tsv | wc -l)-0" | bc)
+TRAININGSET_VOCABSIZE=$(echo "scale=4; $(cat ${DATADIR_ABS_PATH}/${DATASET_NAME}_train/csv2/${DATASET_NAME}_vocab.csv | wc -l)-1" | bc)
+TESTSET_VOCABSIZE=$(echo "scale=4; $(cat ${DATADIR_ABS_PATH}/${DATASET_NAME}_test/csv2/${DATASET_NAME}_vocab.csv | wc -l)-1" | bc)
+
+# Display configuration
+echo "--------------------------------------------------------------------------------------------------------------------------------------"
+printf "| %-40s | %-80s |\n" "Variable" "Value"
+echo "--------------------------------------------------------------------------------------------------------------------------------------"
+printf "| %-40s | %-80s |\n" "DATASET_NAME" "${DATASET_NAME}"
+printf "| %-40s | %-80s |\n" "NUM_TOPICS" "${NUM_TOPICS}"
+printf "| %-40s | %-80s |\n" "ALPHA_PRIOR" "${ALPHA_PRIOR}"
+printf "| %-40s | %-80s |\n" "BETA_PRIOR" "${BETA_PRIOR}"
+printf "| %-40s | %-80s |\n" "NUM_ITERATIONS" "${NUM_ITERATIONS}"
+printf "| %-40s | %-80s |\n" "NUM_THREADS" "${NUM_THREADS}"
+printf "| %-40s | %-80s |\n" "RND_SEED" "${RND_SEED}"
+printf "| %-40s | %-80s |\n" "OUTPUT_DIR" "${OUTPUT_DIR}"
+printf "| %-40s | %-80s |\n" "TESTSET_DIR" "${TESTSET_DIR}"
+printf "| %-40s | %-80s |\n" "TRAININGSET_DIR" "${TRAININGSET_DIR}"
+printf "| %-40s | %-80s |\n" "SAVE_EVERY" "${SAVE_EVERY}"
+printf "| %-40s | %-80s |\n" "MALLET_DIR" "${MALLET_DIR}"
+echo "--------------------------------------------------------------------------------------------------------------------------------------"
+
+# Run the LDA model with profiling
+PROFILING="True"
+python3 ${SCRIPTS_ABS_PATH}/gensim_lda_test.py \
+    --dataset_name ${DATASET_NAME} \
+    --num_topics ${NUM_TOPICS} \
+    --alpha_prior ${ALPHA_PRIOR} \
+    --beta_prior ${BETA_PRIOR} \
+    --num_iterations ${NUM_ITERATIONS} \
+    --num_threads ${NUM_THREADS} \
+    --rnd_seed ${RND_SEED} \
+    --SAVE_EVERY ${SAVE_EVERY} \
+    --chain_state_filepath ${CHAIN_STATE_FILEPATH} \
+    --time_filepath ${TIME_FILEPATH} \
+    --profiling ${PROFILING}
+
+# After profiling, run training with the final configuration
+# PROFILING="False"
+# python3 gensim_lda_test.py \
+#     --dataset_name ${DATASET_NAME} \
+#     --num_topics ${NUM_TOPICS} \
+#     --alpha_prior ${ALPHA_PRIOR} \
+#     --beta_prior ${BETA_PRIOR} \
+#     --num_iterations ${NUM_ITERATIONS} \
+#     --num_threads ${NUM_THREADS} \
+#     --rnd_seed ${RND_SEED} \
+#     --SAVE_EVERY ${SAVE_EVERY} \
+#     --chain_state_filepath ${CHAIN_STATE_FILEPATH} \
+#     --time_filepath ${TIME_FILEPATH} \
+#     --profiling ${PROFILING}
+
+# Evaluate LDA model
+for i in $(seq ${SAVE_EVERY} ${SAVE_EVERY} ${NUM_ITERATIONS})
+do
+   echo "Processing chain-state for iteration ${i}"
+   ${MALLET_DIR}/bin/mallet train-topics --input ${TRAININGSET_DIR}/training.mallet \
+       --input-state ${OUTPUT_DIR}/gensim/chain_states/chain-state_${DATASET_NAME}_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}.gz.${i} \
+       --no-inference \
+       --evaluator-filename ${OUTPUT_DIR}/gensim/evaluators/evaluator_${DATASET_NAME}_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}.${i} \
+       --output-topic-keys ${OUTPUT_DIR}/gensim/topics_defs/topics-def_${DATASET_NAME}_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}.${i}.txt \
+       --random-seed ${RND_SEED}
+done
+
+# Compute log-likelihood and perplexity
+for i in $(seq ${SAVE_EVERY} ${SAVE_EVERY} ${NUM_ITERATIONS})
+do
+   echo "Evaluating log-likelihood for iteration ${i}"
+   # Evaluate test set log-likelihood
+   printf "%i," $i >> ${OUTPUT_DIR}/csv/${DATASET_NAME}_test_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_loglik.csv
+   ${MALLET_DIR}/bin/mallet evaluate-topics --input ${TESTSET_DIR}/test.mallet \
+       --evaluator ${OUTPUT_DIR}/gensim/evaluators/evaluator_${DATASET_NAME}_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}.${i} \
+       --use-resampling FALSE --random-seed ${RND_SEED} | tee -a ${OUTPUT_DIR}/csv/${DATASET_NAME}_test_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_loglik.csv
+   
+   # Evaluate training set log-likelihood
+   printf "%i," $i >> ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_loglik.csv
+   ${MALLET_DIR}/bin/mallet evaluate-topics --input ${TRAININGSET_DIR}/training.mallet \
+       --evaluator ${OUTPUT_DIR}/gensim/evaluators/evaluator_${DATASET_NAME}_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}.${i} \
+       --use-resampling FALSE --random-seed ${RND_SEED} | tee -a ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_loglik.csv
+done
+
+# Compute perplexity for test and train sets
+python3 ${SCRIPTS_ABS_PATH}/loglik2perp.py --srcFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_test_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_loglik.csv \
+    --outFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_test_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_perplexity.csv \
+    --numTokens ${TESTSET_NUMTOKENS}
+
+python3 ${SCRIPTS_ABS_PATH}/loglik2perp.py --srcFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_loglik.csv \
+    --outFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_perplexity.csv \
+    --numTokens ${TRAININGSET_NUMTOKENS}
+
+# Generate plot data
+python3 ${SCRIPTS_ABS_PATH}/genplotdata.py --timingFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_time.csv \
+    --perplexityFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_test_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_perplexity.csv \
+    --outFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_test_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_plotdata.csv
+
+python3 ${SCRIPTS_ABS_PATH}/genplotdata.py --timingFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_time.csv \
+    --perplexityFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_perplexity.csv \
+    --outFile ${OUTPUT_DIR}/csv/${DATASET_NAME}_train_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND${RND_SEED}_gensim_plotdata.csv
+
+# Done
+echo "LDA training and evaluation complete."
+loading_bar
+----------------------------------------
+
+
+### File: verify_shared_data.sh ###
+----------------------------------------
+#!/bin/bash
+
+# Check if shared data directory exists and has required datasets
+SHARED_DATA_DIR="/shared/lda_datasets"
+
+verify_dataset() {
+    local dataset=$1
+    if [ ! -d "${SHARED_DATA_DIR}/${dataset}_train" ]; then
+        echo "ERROR: ${dataset} dataset not found in shared directory"
+        echo "Please run get_uci_datasets.sh first to download and process the data"
+        exit 1
+    fi
+}
+
+# Verify shared directory exists
+if [ ! -d "$SHARED_DATA_DIR" ]; then
+    echo "ERROR: Shared data directory not found at ${SHARED_DATA_DIR}"
+    echo "Please create the directory and run get_uci_datasets.sh first"
+    exit 1
+fi
+
+# Verify required datasets exist
+verify_dataset "KOS"
+verify_dataset "NYTIMES"
+verify_dataset "PUBMED"
+
+# Verify raw UCI data exists
+if [ ! -d "${SHARED_DATA_DIR}/raw/uci" ]; then
+    echo "ERROR: Raw UCI data not found in shared directory"
+    echo "Please run get_uci_datasets.sh first to download the data"
+    exit 1
+fi
+
+echo "All required datasets found in shared directory" 
+----------------------------------------
+
+
+Compilation Summary:
+Total scripts compiled: 8
