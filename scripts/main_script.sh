@@ -22,6 +22,16 @@ BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
 REPORT_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/report)
 LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
+
+# 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
+
+source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
+
+# run the script to download the data and preprocess them into the required format (approx 1 hours )
+ 
+source ${SCRIPTSDIR_ABS_PATH}/get_uci_datasets.sh | tee ${LOGS_ABS_PATH}/log_get_uci_datasets.txt
+
+
 # Parse command line arguments
 TEST_MODE=false
 while getopts "t" opt; do
