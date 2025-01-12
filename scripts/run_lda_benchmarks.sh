@@ -34,15 +34,11 @@ NUM_TOPICS=20
 ALPHA_PRIOR=0.2
 BETA_PRIOR=0.1
 NUM_ITERATIONS=20
-#NUM_ITERATIONS=12
-#NUM_RUNS=3
 NUM_RUNS=2
 SAVE_EVERY=2
 RND_SEED=123
 NUM_THREADS=1
 PARALLEL_PERP_COMP=TRUE
-
-
 
 ###########################################################
 ########################### KOS ###########################
@@ -55,9 +51,6 @@ end=$(date +%s)
 runtime=$((end-start))
 echo "Time taken to run Mallet benchmark on KOS_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND saving every ${SAVE_EVERY}  with is PARALLEL_PERP_COMP = ${PARALLEL_PERP_COMP}: $runtime seconds" | tee -a ${BENCHMARKSDIR_ABS_PATH}/logs/run_lda_benchmarks_exec_time.txt
 
-
-
-
 start=$(date +%s)
 # process KOS dataset with GammaPDB/vrd
 ${SCRIPTSDIR_ABS_PATH}/run_gammapdb_lda.sh --ldaVariant lda-inmemory-vrexpr --datasetName KOS --numTopics ${NUM_TOPICS} --alpha ${ALPHA_PRIOR} --beta ${BETA_PRIOR} --numIterations ${NUM_ITERATIONS} --malletDir ${EXTRASDIR_ABS_PATH}/mallet/Mallet --outputDir ${BENCHMARKSDIR_ABS_PATH} --trainingSetDir ${DATADIR_ABS_PATH}/KOS_train/mallet --testSetDir ${DATADIR_ABS_PATH}/KOS_test/mallet  --saveEvery ${SAVE_EVERY} --rndSeed ${RND_SEED} --numThreads ${NUM_THREADS} --numRuns ${NUM_RUNS} --PARALLEL_PERP_COMP ${PARALLEL_PERP_COMP}
@@ -65,11 +58,15 @@ end=$(date +%s)
 runtime=$((end-start))
 echo "Time taken to run lda-inmemory-vrexpr benchmark on KOS_${NUM_TOPICS}topics_A${ALPHA_PRIOR}_B${BETA_PRIOR}_NI${NUM_ITERATIONS}_NT${NUM_THREADS}_RND saving every ${SAVE_EVERY}  with is PARALLEL_PERP_COMP = ${PARALLEL_PERP_COMP} is: $runtime seconds"  | tee -a ${BENCHMARKSDIR_ABS_PATH}/logs/run_lda_benchmarks_exec_time.txt
 
-
 TotalEnd=$(date +%s)
 runtime=$((TotalEnd-TotalStart))
 echo "Benchmarking KOS single threaded using gammapdb and mallet took $runtime seconds" | tee -a ${BENCHMARKSDIR_ABS_PATH}/logs/run_lda_benchmarks_exec_time.txt
 
+# Exit if in test mode after KOS processing
+if [ "$TEST_MODE" = true ]; then
+    echo "Test mode completed with KOS dataset"
+    exit 0
+fi
 
 # process KOS dataset with GammaPDB/pc
 # start=$(date +%s)

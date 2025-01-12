@@ -22,18 +22,26 @@ BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
 REPORT_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/report)
 LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
-
-
-
+# Parse command line arguments
+TEST_MODE=false
+while getopts "t" opt; do
+  case $opt in
+    t)
+      TEST_MODE=true
+      echo "Running in test mode - will only process KOS dataset"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
 
 # 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
-
-source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
+#source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
 
 # run the script to download the data and preprocess them into the required format (approx 1 hours )
- 
-source ${SCRIPTSDIR_ABS_PATH}/get_uci_datasets.sh | tee ${LOGS_ABS_PATH}/log_get_uci_datasets.txt
-
+#source ${SCRIPTSDIR_ABS_PATH}/get_uci_datasets.sh | tee ${LOGS_ABS_PATH}/log_get_uci_datasets.txt
 
 # compile starfishDB
 cd ${BUILDDIR_ABS_PATH} 
@@ -42,9 +50,14 @@ cmake3 -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=`readlink -
 
 ninja | tee ${LOGS_ABS_PATH}/log_ninja.txt
 
-
-
 #Run experiments
+if [ "$TEST_MODE" = true ]; then
+    echo "Running test benchmark with KOS dataset only..."
+    # Run only KOS dataset with 20 topics
+    export TEST_MODE=true
+    source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarks.sh | tee ${LOGS_ABS_PATH}/log_run_lda_benchmarks.txt
+    exit 0
+fi
 
 #Run 20 topics experimets
 source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarks.sh| tee ${LOGS_ABS_PATH}/log_run_lda_benchmarks.txt
@@ -63,9 +76,8 @@ source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarksP100.sh| tee ${LOGS_ABS_PATH}/lo
 #Cleaning
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/gammapdb_data/lda-inmemory-vrexprP/chain_states/*
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/mallet_data/chain_states/*
-
-
 # creating the reports
+
 
 
 # cd ${REPORT_ABS_PATH}
