@@ -15,7 +15,7 @@ EXTERNALTOOLS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/external)
 EXTERNALLIBS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/libs)
 PATCHESDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/patches)
 BUILDDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/build)
-DATADIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/data)
+DATADIR_ABS_PATH="/app/data"
 CONFDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/conf)
 EXTRASDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/extras)
 BENCHMARKSDIR_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/benchmarks)
@@ -70,7 +70,7 @@ fi
 # Download the UCI "bag-of-words" data sets, if necessary
 #
 if [ ! -d "${DATADIR_ABS_PATH}/raw/uci" ]; then
-   echo "${DATADIR_ABS_PATH}/raw/uci does not exist. Downloading the data sets froms scratch..."
+   echo "${DATADIR_ABS_PATH}/raw/uci does not exist. Downloading the data sets from scratch..."
    mkdir -p ${DATADIR_ABS_PATH}/raw/uci
    # download UCI datasets
    wget -P ${DATADIR_ABS_PATH}/raw/uci -nc -i ${CONFDIR_ABS_PATH}/uci_datasets.txt

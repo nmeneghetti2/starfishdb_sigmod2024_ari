@@ -17,26 +17,23 @@ PROJECT_ROOT_ABS_PATH_HASH=$(echo "${PROJECT_ROOT_ABS_PATH}" | md5sum | cut -d' 
 # Determine commonly used directories
 DATADIR_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/data")
 
-# Relocate <root>/data, if necessary
-if [ $(grep -c "^[^#]" "${SCRIPTSDIR_ABS_PATH}/../conf/datadir_redirect.txt") != "0" ]; then
-  mkdir -p $(grep "^[^#]" "${SCRIPTSDIR_ABS_PATH}/../conf/datadir_redirect.txt" | head -n 1)
-  DATADIR_ABS_PATH=$(readlink -f $(grep "^[^#]" "${SCRIPTSDIR_ABS_PATH}/../conf/datadir_redirect.txt" | head -n 1))
-  echo "NOTICE: <root>/data directory was relocated to ${DATADIR_ABS_PATH}"
-fi
+# Define shared data directory on host - now at project root level
+SHARED_DATA_DIR="${PROJECT_ROOT_ABS_PATH}/../shared/lda_datasets"
 
-# Ensure the data directory exists
-mkdir -p "${DATADIR_ABS_PATH}"
+# Ensure the shared data directory exists
+mkdir -p "${SHARED_DATA_DIR}"
 
-DISTRO="devenv"
-
-# define the image's name
+# Define container name and mount options
 DOCKER_IMG_NAME="gensim_lda_centos7_docker_img" 
 DOCKER_CONT_NAME="gensim_lda_container_${ORIG_USER}${PROJECT_ROOT_ABS_PATH_HASH}"
-MOUNT_OPTIONS="${PROJECT_ROOT_ABS_PATH}:/app:Z ${DATADIR_ABS_PATH}:/data:Z"
+MOUNT_OPTIONS="${PROJECT_ROOT_ABS_PATH}:/app:Z ${SHARED_DATA_DIR}:/app/data:Z"
 
 echo "Mount options: ${MOUNT_OPTIONS}"
 echo "Container name: ${DOCKER_CONT_NAME}"
 
-docker run -v "${PROJECT_ROOT_ABS_PATH}:/app:Z" -v "${DATADIR_ABS_PATH}:/data:Z" --name "${DOCKER_CONT_NAME}" --detach --tty "${DOCKER_IMG_NAME}" /bin/bash
+# Run container with mounted volumes
+docker run -v "${PROJECT_ROOT_ABS_PATH}:/app:Z" -v "${SHARED_DATA_DIR}:/app/data:Z" \
+    --name "${DOCKER_CONT_NAME}" \
+    --detach --tty "${DOCKER_IMG_NAME}" /bin/bash
 
 echo "Or run \"docker exec -it ${DOCKER_CONT_NAME} bash\" to access the container."

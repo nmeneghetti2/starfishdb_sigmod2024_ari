@@ -16,6 +16,17 @@ SCRIPTSDIR_ABS_PATH=$(dirname ${SCRIPTSDIR_ABS_PATH})
 PROJECT_ROOT_ABS_PATH=$(readlink -f ${SCRIPTSDIR_ABS_PATH}/../)
 PROJECT_ROOT_ABS_PATH_HASH=$(echo ${PROJECT_ROOT_ABS_PATH} | md5sum | cut -d' ' -f 1 | cut -c 25-32) 
 
+# Define shared data directory - same location as used by gensim container
+SHARED_DATA_DIR=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/shared/lda_datasets")
+
+# Ensure the shared data directory exists
+mkdir -p "${SHARED_DATA_DIR}"
+
+# Debug output
+echo "Project root: ${PROJECT_ROOT_ABS_PATH}"
+echo "Shared data directory: ${SHARED_DATA_DIR}"
+ls -la "${SHARED_DATA_DIR}" || echo "Warning: Cannot access ${SHARED_DATA_DIR}"
+
 # Determine commonly used directories
 EXTERNALTOOLS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/external)
 EXTERNALLIBS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/libs)
@@ -49,12 +60,14 @@ DISTRO="devenv"
 DOCKER_IMG_NAME="starfishdb_dev_env_docker_img" 
 DOCKER_CONT_NAME="starfishdb_dev_env_container_${ORIG_USER}${PROJECT_ROOT_ABS_PATH_HASH}"
 #MOUNT_OPTIONS="type=bind,source=${PROJECT_ROOT_ABS_PATH},target=/gammapdb_arrow"
-MOUNT_OPTIONS="${PROJECT_ROOT_ABS_PATH}:/gammapdb_arrow:z"
+MOUNT_OPTIONS="${PROJECT_ROOT_ABS_PATH}:/gammapdb_arrow:z ${SHARED_DATA_DIR}:/gammapdb_arrow/data:z"
 
-echo $MOUNT_OPTIONS
-echo $DOCKER_CONT_NAME
+echo "Mount options: ${MOUNT_OPTIONS}"
+echo "Container name: ${DOCKER_CONT_NAME}"
 
-docker run -v ${MOUNT_OPTIONS} --name ${DOCKER_CONT_NAME}  --detach --tty ${DOCKER_IMG_NAME} /bin/bash
+docker run -v "${PROJECT_ROOT_ABS_PATH}:/gammapdb_arrow:z" -v "${SHARED_DATA_DIR}:/gammapdb_arrow/data:z" \
+    --name "${DOCKER_CONT_NAME}" \
+    --detach --tty "${DOCKER_IMG_NAME}" /bin/bash
 
 echo "Run \"docker exec -it ${DOCKER_CONT_NAME} bash\" to access the container."
 

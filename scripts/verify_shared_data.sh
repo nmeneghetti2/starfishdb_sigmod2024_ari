@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check if shared data directory exists and has required datasets
-SHARED_DATA_DIR="/data"
+SHARED_DATA_DIR="/shared/lda_datasets"
 
 verify_dataset() {
     local dataset=$1
@@ -31,4 +31,4 @@ if [ ! -d "${SHARED_DATA_DIR}/raw/uci" ]; then
     exit 1
 fi
 
-echo "All required datasets found in shared directory" 
+echo "All required datasets found in shared directory"

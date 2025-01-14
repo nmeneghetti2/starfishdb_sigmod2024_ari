@@ -1,3 +1,47 @@
+# Installation and temporary files
+**/install-tl-*/
+**/install-tl-*.tar.gz*
+*.tar.gz.*
+
+# Build and binary files
+build/
+bin/
+lib/
+*.o
+*.so
+*.dylib
+
+# Data directories (since they're shared externally)
+data/
+shared/lda_datasets/
+
+# Log files
+logs/
+*.log
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*~
+
+# Dependencies
+node_modules/
+vendor/
+
 # untracked directories
 external/*
 libs/*
@@ -24,6 +68,7 @@ gensim_experiments/**/.DS_Store
 extras/lda_preprocess/build
 extras/lda_preprocess/data
 extras/mallet
+
 # Prerequisites
 *.d
 
@@ -58,3 +103,12 @@ extras/mallet
 *.app
 
 .vscode
+
+# Additional temporary files
+*.tmp
+*~
+
+# Additional Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
