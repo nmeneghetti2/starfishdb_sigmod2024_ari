@@ -25,7 +25,7 @@ LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
 # 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
 
-#source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
+source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
 
 # Ensure Mallet is installed in the correct location
 if [ ! -d "${EXTRASDIR_ABS_PATH}/mallet/Mallet" ]; then
