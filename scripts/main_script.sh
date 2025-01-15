@@ -25,20 +25,27 @@ LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
 # 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
 
-source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
+#source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
 
 # Ensure Mallet is installed in the correct location
-if [ ! -f "${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet" ]; then
+if [ ! -d "${EXTRASDIR_ABS_PATH}/mallet/Mallet" ]; then
     echo "Installing Mallet..."
-    mkdir -p "${EXTRASDIR_ABS_PATH}/mallet"
-    cd "${EXTRASDIR_ABS_PATH}/mallet"
-    wget https://github.com/mimno/Mallet/releases/download/2.0.8/mallet-2.0.8.tar.gz
-    tar -xzf mallet-2.0.8.tar.gz
-    mv mallet-2.0.8 Mallet
-    rm mallet-2.0.8.tar.gz
-    chmod +x Mallet/bin/mallet
-    cd "${BUILDDIR_ABS_PATH}"
+    cwd=$(pwd)
+    mkdir -p ${EXTRASDIR_ABS_PATH}/mallet/Mallet
+    git clone --branch v202108 https://github.com/mimno/Mallet.git ${EXTRASDIR_ABS_PATH}/mallet/Mallet
+    cd "${EXTRASDIR_ABS_PATH}/mallet/Mallet" 
+    git apply --unsafe-paths --directory=${EXTRASDIR_ABS_PATH}/mallet/Mallet ${PATCHESDIR_ABS_PATH}/mallet.patch
+    ant -buildfile ${EXTRASDIR_ABS_PATH}/mallet/Mallet/build.xml
+    cd ${cwd}
+else
+    echo "Mallet is already installed."
 fi
+
+# Ensure we're in the build directory before running cmake
+if [ ! -d "${BUILDDIR_ABS_PATH}" ]; then
+    mkdir -p "${BUILDDIR_ABS_PATH}"
+fi
+cd "${BUILDDIR_ABS_PATH}"
 
 # Data is now mounted from the shared directory populated by gensim container
 # No need to download and preprocess again
