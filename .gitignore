@@ -112,3 +112,8 @@ extras/mallet
 __pycache__/
 *.py[cod]
 *$py.class
+
+# Mallet specific
+**/mallet-2.0.8/
+**/mallet-2.0.8.tar.gz
+extras/mallet/Mallet/

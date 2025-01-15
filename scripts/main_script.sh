@@ -27,6 +27,19 @@ LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
 source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
 
+# Ensure Mallet is installed in the correct location
+if [ ! -f "${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet" ]; then
+    echo "Installing Mallet..."
+    mkdir -p "${EXTRASDIR_ABS_PATH}/mallet"
+    cd "${EXTRASDIR_ABS_PATH}/mallet"
+    wget https://github.com/mimno/Mallet/releases/download/2.0.8/mallet-2.0.8.tar.gz
+    tar -xzf mallet-2.0.8.tar.gz
+    mv mallet-2.0.8 Mallet
+    rm mallet-2.0.8.tar.gz
+    chmod +x Mallet/bin/mallet
+    cd "${BUILDDIR_ABS_PATH}"
+fi
+
 # Data is now mounted from the shared directory populated by gensim container
 # No need to download and preprocess again
 # source ${SCRIPTSDIR_ABS_PATH}/get_uci_datasets.sh | tee ${LOGS_ABS_PATH}/log_get_uci_datasets.txt
@@ -48,7 +61,7 @@ while getopts "t" opt; do
 done
 
 # 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
-#source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
+source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
 
 # run the script to download the data and preprocess them into the required format (approx 1 hours )
 #source ${SCRIPTSDIR_ABS_PATH}/get_uci_datasets.sh | tee ${LOGS_ABS_PATH}/log_get_uci_datasets.txt
