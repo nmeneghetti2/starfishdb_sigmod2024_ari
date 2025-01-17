@@ -70,10 +70,24 @@ fi
 # Download the UCI "bag-of-words" data sets, if necessary
 #
 if [ ! -d "${DATADIR_ABS_PATH}/raw/uci" ]; then
-   echo "${DATADIR_ABS_PATH}/raw/uci does not exist. Downloading the data sets from scratch..."
-   mkdir -p ${DATADIR_ABS_PATH}/raw/uci
-   # download UCI datasets
-   wget -P ${DATADIR_ABS_PATH}/raw/uci -nc -i ${CONFDIR_ABS_PATH}/uci_datasets.txt
+   echo "${DATADIR_ABS_PATH}/raw/uci does not exist. Downloading the data sets froms scratch..."
+   mkdir -p   ${DATADIR_ABS_PATH}/raw/uci
+   # download UCI datasets, If the download fails due to network error, wait 30 seconds then retry.
+   RETRY=true
+   while $RETRY; do
+      wget -nc --tries=0 --waitretry=30 --retry-connrefused \
+            -P "${DATADIR_ABS_PATH}/raw/uci" \
+            -i "${CONFDIR_ABS_PATH}/uci_datasets.txt"
+      if [ $? -eq 0 ]; then
+         RETRY=false
+      else
+         rm -rf "${DATADIR_ABS_PATH}/raw/uci/*"
+         echo "Download failed. Retrying in 30 seconds..."
+         sleep 30
+      fi
+   done
+   echo "Cheksums verification of the downloaded files... "
+   sha256sum -c ${CONFDIR_ABS_PATH}/checksums.sha256
    for filename in ${DATADIR_ABS_PATH}/raw/uci/*.gz
    do
       if [ ! -f "$(echo ${filename} | sed -e 's/\.[^.]*$//')" ]
@@ -84,6 +98,7 @@ if [ ! -d "${DATADIR_ABS_PATH}/raw/uci" ]; then
 else
    echo "Downloading UCI datasets... Nothing to do."
 fi
+
 
 # #######################################
 # KOS DATASET

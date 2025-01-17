@@ -25,7 +25,7 @@ LOGS_ABS_PATH=$(readlink -f ${PROJECT_ROOT_ABS_PATH}/logs)
 
 # 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
 
-source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
+source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_get_deps.txt
 
 # Ensure Mallet is installed in the correct location
 if [ ! -d "${EXTRASDIR_ABS_PATH}/mallet/Mallet" ]; then
@@ -68,7 +68,8 @@ while getopts "t" opt; do
 done
 
 # 1run the scripts responsible for downloading and compiling all the necessary dependencies  (approx 2 hours ):
-source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
+
+#source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.txt
 
 # run the script to download the data and preprocess them into the required format (approx 1 hours )
 #source ${SCRIPTSDIR_ABS_PATH}/get_uci_datasets.sh | tee ${LOGS_ABS_PATH}/log_get_uci_datasets.txt
@@ -76,7 +77,7 @@ source ${SCRIPTSDIR_ABS_PATH}/get_deps.sh | tee ${LOGS_ABS_PATH}/log_get_deps.tx
 # compile starfishDB
 cd ${BUILDDIR_ABS_PATH} 
 
-cmake3 -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=`readlink -f ../libs/llvm-project-cxxjit/bin`/clang -DCMAKE_CXX_COMPILER=`readlink -f ../libs/llvm-project-cxxjit/bin`/clang++ ..  | tee ${LOGS_ABS_PATH}/log_cmake3.txt
+cmake3 -G Ninja -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_COMPILER=`readlink -f ../libs/llvm-project-cxxjit/bin`/clang -DCMAKE_CXX_COMPILER=`readlink -f ../libs/llvm-project-cxxjit/bin`/clang++ ..   2>&1 | tee ${LOGS_ABS_PATH}/log_cmake3.txt
 
 ninja | tee ${LOGS_ABS_PATH}/log_ninja.txt
 
@@ -85,24 +86,24 @@ if [ "$TEST_MODE" = true ]; then
     echo "Running test benchmark with KOS dataset only..."
     # Run only KOS dataset with 20 topics
     export TEST_MODE=true
-    source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarks.sh | tee ${LOGS_ABS_PATH}/log_run_lda_benchmarks.txt
+    source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarks.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_run_lda_benchmarks.txt
     exit 0
 fi
 
 #Run 20 topics experimets
-source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarks.sh| tee ${LOGS_ABS_PATH}/log_run_lda_benchmarks.txt
+source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarks.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_run_lda_benchmarks.txt
 #Cleaning
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/gammapdb_data/lda-inmemory-vrexpr/chain_states/*
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/mallet_data/chain_states/*
 
 #Run 50 topics experimets
-source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarksP50.sh| tee ${LOGS_ABS_PATH}/log_run_lda_benchmarksP50.txt
+source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarksP50.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_run_lda_benchmarksP50.txt
 #Cleaning
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/gammapdb_data/lda-inmemory-vrexprP/chain_states/*
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/mallet_data/chain_states/*
 
 #Run 50 topics experimets
-source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarksP100.sh| tee ${LOGS_ABS_PATH}/log_run_lda_benchmarksP100.txt
+source ${SCRIPTSDIR_ABS_PATH}/run_lda_benchmarksP100.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_run_lda_benchmarksP100.txt
 #Cleaning
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/gammapdb_data/lda-inmemory-vrexprP/chain_states/*
 rm -rf ${BENCHMARKSDIR_ABS_PATH}/mallet_data/chain_states/*
@@ -110,10 +111,10 @@ rm -rf ${BENCHMARKSDIR_ABS_PATH}/mallet_data/chain_states/*
 
 
 
-# cd ${REPORT_ABS_PATH}
+cd ${REPORT_ABS_PATH}
 
-# source ${REPORT_ABS_PATH}/create20TopicsReport.sh| tee ${LOGS_ABS_PATH}/log_create20TopicsReport.txt
+source ${REPORT_ABS_PATH}/create20TopicsReport.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_create20TopicsReport.txt
 
-# source ${REPORT_ABS_PATH}/create50TopicsReport.sh| tee ${LOGS_ABS_PATH}/log_create50TopicsReport.txt
+source ${REPORT_ABS_PATH}/create50TopicsReport.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_create50TopicsReport.txt
 
-# source ${REPORT_ABS_PATH}/create100TopicsReport.sh| tee ${LOGS_ABS_PATH}/log_create100TopicsReport.txt
+source ${REPORT_ABS_PATH}/create100TopicsReport.sh  2>&1 | tee ${LOGS_ABS_PATH}/log_create100TopicsReport.txt
