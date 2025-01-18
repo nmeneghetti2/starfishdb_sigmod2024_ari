@@ -87,7 +87,7 @@ if [ ! -d "${DATADIR_ABS_PATH}/raw/uci" ]; then
       fi
    done
    echo "Cheksums verification of the downloaded files... "
-   sha256sum -c ${CONFDIR_ABS_PATH}/checksums.sha256
+   sha256sum -c ${CONFDIR_ABS_PATH}/checksums.txt
    for filename in ${DATADIR_ABS_PATH}/raw/uci/*.gz
    do
       if [ ! -f "$(echo ${filename} | sed -e 's/\.[^.]*$//')" ]
