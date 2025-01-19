@@ -1,0 +1,30 @@
+# Installation files and directories
+install-tl-*/
+install-tl-*.tar.gz*
+*.tar.gz.*
+
+# Temporary files
+*.tmp
+*~
+
+# Log files
+*.log
+
+# Build directories
+build/
+dist/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db 

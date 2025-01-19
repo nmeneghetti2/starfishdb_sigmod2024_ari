@@ -9,6 +9,21 @@ SCRIPTS_ABS_PATH=$(readlink -f "${PROJECT_ROOT_ABS_PATH}/scripts")
 # Set the path to the run_gensim.sh script
 RUN_GENSIM_SCRIPT="${SCRIPTS_ABS_PATH}/run_gensim.sh"
 
+# Parse command line arguments
+TEST_MODE=false
+while getopts "t" opt; do
+  case $opt in
+    t)
+      TEST_MODE=true
+      echo "Running in test mode - will only process KOS dataset"
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
+
 # Check if the run_gensim.sh script exists
 if [ ! -f "$RUN_GENSIM_SCRIPT" ]; then
     echo "Error: $RUN_GENSIM_SCRIPT not found!"
@@ -27,8 +42,12 @@ mkdir -p "$LOGS_ABS_PATH"
 # Set the log file path
 LOG_FILE="${LOGS_ABS_PATH}/gensim_benchmark_$(date +%Y%m%d_%H%M%S).log"
 
-# Array of datasets
-DATASETS=("KOS" "NYTIMES" "PUBMED")
+# Array of datasets - if test mode, only include KOS
+if [ "$TEST_MODE" = true ]; then
+    DATASETS=("KOS")
+else
+    DATASETS=("KOS" "NYTIMES" "PUBMED")
+fi
 
 # Function to run the script, log output, and measure time
 run_and_log() {
@@ -52,6 +71,9 @@ run_and_log() {
 # Main execution
 {
     echo "Starting Gensim benchmark at $(date)"
+    if [ "$TEST_MODE" = true ]; then
+        echo "Running in test mode with KOS dataset only"
+    fi
     echo "Project root: $PROJECT_ROOT_ABS_PATH"
     echo "Scripts directory: $SCRIPTS_ABS_PATH"
     echo "Log file: $LOG_FILE"
@@ -63,6 +85,9 @@ run_and_log() {
     done
 
     echo "All datasets have been processed."
+    if [ "$TEST_MODE" = true ]; then
+        echo "Test mode completed successfully with KOS dataset"
+    fi
     echo "Gensim benchmark completed at $(date)"
 } 2>&1 | tee -a "$LOG_FILE"
 

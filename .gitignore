@@ -1,0 +1,119 @@
+# Installation and temporary files
+**/install-tl-*/
+**/install-tl-*.tar.gz*
+*.tar.gz.*
+
+# Build and binary files
+build/
+bin/
+lib/
+*.o
+*.so
+*.dylib
+
+# Data directories (since they're shared externally)
+data/
+shared/lda_datasets/
+
+# Log files
+logs/
+*.log
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE specific files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*~
+
+# Dependencies
+node_modules/
+vendor/
+
+# untracked directories
+external/*
+libs/*
+logs/*
+build
+data
+benchmarks/*
+**/.DS_Store
+.vscode
+
+# untracked directories for gensim experiments
+gensim_experiments/libs/*
+gensim_experiments/logs/*
+gensim_experiments/build
+gensim_experiments/data
+gensim_experiments/extras/mallet
+gensim_experiments/extras/lda_preprocess/build
+gensim_experiments/extras/lda_preprocess/data
+gensim_experiments/external/*
+gensim_experiments/benchmarks/*
+gensim_experiments/**/.DS_Store
+
+# untracked dirs in lda_preprocess
+extras/lda_preprocess/build
+extras/lda_preprocess/data
+extras/mallet
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+.vscode
+
+# Additional temporary files
+*.tmp
+*~
+
+# Additional Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Mallet specific
+**/mallet-2.0.8/
+**/mallet-2.0.8.tar.gz
+extras/mallet/Mallet/

@@ -61,6 +61,15 @@ if [ ! -d "${EXTRASDIR_ABS_PATH}/mallet/Mallet" ]; then
    git apply --unsafe-paths --directory=${EXTRASDIR_ABS_PATH}/mallet/Mallet ${PATCHESDIR_ABS_PATH}/mallet.patch
    ant -buildfile ${EXTRASDIR_ABS_PATH}/mallet/Mallet/build.xml
    cd ${cwd}
+
+   # Verify the Mallet binary exists
+   if [ ! -f "${EXTRASDIR_ABS_PATH}/mallet/Mallet/bin/mallet" ]; then
+      echo "Error: Mallet binary not found after compilation."
+      exit 1
+   else
+      echo "Mallet has been successfully downloaded and compiled."
+   fi
+
 else
    echo "Compiling Mallet... Nothing to do."
 fi
@@ -72,8 +81,22 @@ fi
 if [ ! -d "${DATADIR_ABS_PATH}/raw/uci" ]; then
    echo "${DATADIR_ABS_PATH}/raw/uci does not exist. Downloading the data sets froms scratch..."
    mkdir -p ${DATADIR_ABS_PATH}/raw/uci
-   # download UCI datasets
-   wget -P ${DATADIR_ABS_PATH}/raw/uci -nc -i ${CONFDIR_ABS_PATH}/uci_datasets.txt
+   # download UCI datasets, If the download fails due to network error, wait 30 seconds then retry.
+   RETRY=true
+   while $RETRY; do
+      wget -nc --tries=0 --waitretry=30 --retry-connrefused \
+            -P "${DATADIR_ABS_PATH}/raw/uci" \
+            -i "${CONFDIR_ABS_PATH}/uci_datasets.txt"
+      if [ $? -eq 0 ]; then
+         RETRY=false
+      else
+         rm -rf "${DATADIR_ABS_PATH}/raw/uci/*"
+         echo "Download failed. Retrying in 30 seconds..."
+         sleep 30
+      fi
+   done
+   echo "Cheksums verification of the downloaded files... "
+   sha256sum -c ${CONFDIR_ABS_PATH}/checksums.sha256
    for filename in ${DATADIR_ABS_PATH}/raw/uci/*.gz
    do
       if [ ! -f "$(echo ${filename} | sed -e 's/\.[^.]*$//')" ]

@@ -1,0 +1,4 @@
+6439c39f2fccb4876563e4b4c9628974d8ccbeada43d661292a5024911389e30  ../data/raw/uci/docword.kos.txt.gz
+d45f9f7ceeadf118117e14346f018273007b765593a4dbe02915d37a1faa58b7  ../data/raw/uci/docword.nips.txt.gz
+6fc63144a5834ddcc255313625a235a85440bf5b702d06a6c676f749262e43b7  ../data/raw/uci/docword.nytimes.txt.gz
+aa29dba1376122d0e2a03ee78a4152325befea55ec1463ca94153004e33b0bfc  ../data/raw/uci/docword.pubmed.txt.gz
